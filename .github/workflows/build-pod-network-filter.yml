@@ -1,0 +1,57 @@
+name: Test & Build Pod Network Filter
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+permissions:
+  pull-requests: write
+  contents: write
+jobs:
+  test:
+    name: Execute Functional & Unit Tests
+    strategy:
+      matrix:
+        python-version: [ '3.9' ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install poetry
+        working-directory: ./pod-network-filter
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+      - name: Install project dependencies
+        working-directory: ./pod-network-filter
+        run: |
+          poetry install --no-interaction
+      - name: Run tests
+        working-directory: ./pod-network-filter
+        run: |
+          poetry run python3 -m unittest discover
+
+  build-image:
+    name: Build and push container image
+    runs-on: ubuntu-latest
+    needs:
+      - test
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Build Docker image
+        working-directory: ./pod-network-filter
+        run: |
+          docker build -f Containerfile --no-cache -t quay.io/krkn-chaos/krkn-funtests:pod-network-filter .
+      - name: Login in quay
+        run: |
+          docker login quay.io -u ${QUAY_USER} -p ${QUAY_TOKEN}
+        env:
+          QUAY_USER: ${{ secrets.QUAY_USERNAME }}
+          QUAY_TOKEN: ${{ secrets.QUAY_PASSWORD }}
+      - name: Push Docker image
+        run: |
+          docker push quay.io/krkn-chaos/krkn-funtests:pod-network-filter
