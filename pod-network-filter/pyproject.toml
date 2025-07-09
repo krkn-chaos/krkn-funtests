@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "krkn-pod-network-filter-funtest"
+version = "0.1.0"
+description = "A webservice to execute pod network filter functional test"
+authors = ["Tullio Sebastiani <tsebasti@redhat.com>"]
+readme = "README.md"
+packages = [{include = "app.py", from="./"}]
+package-mode=false
+license="Apache-2.0"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+flask = "^3.1.1"
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
